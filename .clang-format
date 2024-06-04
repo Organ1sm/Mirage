@@ -75,7 +75,7 @@ BreakConstructorInitializers: BeforeColon
 BreakInheritanceList: BeforeColon
 BreakStringLiterals: true
 
-ColumnLimit: 98
+ColumnLimit: 85
 
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 2

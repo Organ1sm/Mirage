@@ -57,7 +57,7 @@ namespace mirage::util
     struct VariableTraits;
 
     template <typename T>
-    struct VariableTraits<T*> : internal::BasicVariableTraits<T>
+    struct VariableTraits<T *> : internal::BasicVariableTraits<T>
     {
         using pointer = T *;
     };

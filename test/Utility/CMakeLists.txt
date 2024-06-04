@@ -1,1 +1,2 @@
 AddTest(VariableTraits)
+AddTest(TypeList)
