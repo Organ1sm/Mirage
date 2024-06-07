@@ -38,7 +38,7 @@ TEST_CASE("function pointer traits")
 {
     SECTION("global function")
     {
-        using traits = function_pointer_traits<globFunc>;
+        using traits = FunctionPointerTraits<globFunc>;
         static_assert(std::is_same_v<traits::args, TypeList<float, std::string>>);
         static_assert(!traits::is_const);
         static_assert(!traits::is_member);
@@ -49,7 +49,7 @@ TEST_CASE("function pointer traits")
 
     SECTION("member function")
     {
-        using traits = function_pointer_traits<&Clazz::Foo>;
+        using traits = FunctionPointerTraits<&Clazz::Foo>;
         static_assert(std::is_same_v<traits::args, TypeList<>>);
         static_assert(!traits::is_const);
         static_assert(traits::is_member);
@@ -60,7 +60,7 @@ TEST_CASE("function pointer traits")
 
     SECTION("const member function")
     {
-        using traits = function_pointer_traits<&Clazz::constFoo>;
+        using traits = FunctionPointerTraits<&Clazz::constFoo>;
         static_assert(std::is_same_v<traits::args, TypeList<double>>);
         static_assert(traits::is_const);
         static_assert(traits::is_member);
@@ -70,7 +70,7 @@ TEST_CASE("function pointer traits")
 
     SECTION("static function")
     {
-        using traits = function_pointer_traits<Clazz::staticFoo>;
+        using traits = FunctionPointerTraits<Clazz::staticFoo>;
         static_assert(std::is_same_v<traits::args, TypeList<float>>);
         static_assert(!traits::is_const);
         static_assert(!traits::is_member);

@@ -13,7 +13,8 @@ fetchcontent_declare(
 )
 fetchcontent_makeavailable(Catch2)
 
-add_library(Mirage INTERFACE)
+add_library(Mirage INTERFACE
+        include/Mirage/StaticRefl/StaticReflEnd.hpp)
 target_include_directories(Mirage INTERFACE ./include)
 target_compile_features(Mirage INTERFACE cxx_std_17)
 

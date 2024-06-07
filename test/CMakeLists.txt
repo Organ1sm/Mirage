@@ -7,4 +7,4 @@ macro(AddTest name)
 endmacro(AddTest)
 
 add_subdirectory(Utility)
-#add_subdirectory(srefl)
+add_subdirectory(StaticRefl)

@@ -83,10 +83,10 @@ namespace mirage::util
      * @tparam Func
      */
     template <typename Func>
-    struct function_traits;
+    struct FunctionTraits;
 
     template <typename Ret, typename... Args>
-    struct function_traits<Ret(Args...)> : detail::BasicFunctionTraits<Ret(Args...)>
+    struct FunctionTraits<Ret(Args...)> : detail::BasicFunctionTraits<Ret(Args...)>
     {
         using type    = Ret(Args...);
         using pointer = Ret (*)(Args...);
@@ -96,7 +96,7 @@ namespace mirage::util
     };
 
     template <typename Ret, typename Class, typename... Args>
-    struct function_traits<Ret (Class::*)(Args...)> : detail::BasicFunctionTraits<Ret(Args...)>
+    struct FunctionTraits<Ret (Class::*)(Args...)> : detail::BasicFunctionTraits<Ret(Args...)>
     {
         using type    = Ret (Class::*)(Args...);
         using pointer = type;
@@ -106,7 +106,7 @@ namespace mirage::util
     };
 
     template <typename Ret, typename Class, typename... Args>
-    struct function_traits<Ret (Class::*)(Args...) const>
+    struct FunctionTraits<Ret (Class::*)(Args...) const>
       : detail::BasicFunctionTraits<Ret(Args...)>
     {
         using type    = Ret (Class::*)(Args...) const;
@@ -119,7 +119,7 @@ namespace mirage::util
     namespace detail
     {
         template <auto F>
-        struct FunctionPointerTraits : function_traits<function_type_from_pointer_t<F>>
+        struct FunctionPointerTraits : FunctionTraits<function_type_from_pointer_t<F>>
         { };
     }    // namespace detail
 
@@ -127,7 +127,7 @@ namespace mirage::util
      * @brief extract function info from function pointer
      */
     template <auto F>
-    using function_pointer_traits = detail::FunctionPointerTraits<F>;
+    using FunctionPointerTraits = detail::FunctionPointerTraits<F>;
 
     /**
      * @brief check a type is a function or function pointer
