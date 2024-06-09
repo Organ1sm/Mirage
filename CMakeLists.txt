@@ -13,14 +13,17 @@ fetchcontent_declare(
 )
 fetchcontent_makeavailable(Catch2)
 
-add_library(Mirage INTERFACE
-        include/Mirage/StaticRefl/StaticReflEnd.hpp)
+add_library(Mirage INTERFACE)
 target_include_directories(Mirage INTERFACE ./include)
 target_compile_features(Mirage INTERFACE cxx_std_17)
 
-option(MIRAGE_BUILD_TEST "build test" ON)
+option(MIRAGE_BUILD_TEST "build test" OFF)
 
-if (Mirage_BUILD_TEST)
+if (PROJECT_IS_TOP_LEVEL)
+    set(Mi ON CACHE BOOL "build test" FORCE)
+endif ()
+
+if (MIRAGE_BUILD_TEST)
     enable_testing()
     add_subdirectory(test)
 endif ()
