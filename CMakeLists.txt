@@ -19,10 +19,6 @@ target_compile_features(Mirage INTERFACE cxx_std_17)
 
 option(MIRAGE_BUILD_TEST "build test" OFF)
 
-if (PROJECT_IS_TOP_LEVEL)
-    set(Mi ON CACHE BOOL "build test" FORCE)
-endif ()
-
 if (MIRAGE_BUILD_TEST)
     enable_testing()
     add_subdirectory(test)

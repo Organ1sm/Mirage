@@ -31,7 +31,7 @@ namespace mirage::util
 
     /**
      * @brief get function type from function pointer type
-     * @tparam  F
+     * @tparam  F function pointer type
      */
     template <typename F>
     using function_type_t = typename detail::FunctionType<F>::type;
@@ -51,18 +51,17 @@ namespace mirage::util
 
     /**
      * @brief get a function pointer type from it's function pointer
-     *
-     * @tparam F
+     * @tparam F  function pointer
      */
     template <auto F>
     using function_pointer_type_t = decltype(detail::FunctionPointerToType(0, F));
 
     /**
-     * @brief get a function from it's function pointer
+     * @brief get function type from it's function pointer
+     * @tparam F function pointer
      */
     template <auto F>
-    using function_type_from_pointer_t =
-        function_type_t<decltype(detail::FunctionPointerToType(0, F))>;
+    using function_type_from_pointer_t = function_type_t<function_pointer_type_t<F>>;
 
     namespace detail
     {

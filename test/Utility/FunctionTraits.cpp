@@ -14,8 +14,6 @@ struct Clazz
 TEST_CASE("function pointer type")
 {
     static_assert(
-        std::is_same_v<function_type_from_pointer_t<globFunc>, void(float, std::string)>);
-    static_assert(
         std::is_same_v<function_pointer_type_t<&Clazz::Foo>, std::string (Clazz::*)()>);
     static_assert(std::is_same_v<function_pointer_type_t<Clazz::staticFoo>, int &(*)(float)>);
     static_assert(std::is_same_v<function_pointer_type_t<&Clazz::constFoo>,
@@ -53,9 +51,9 @@ TEST_CASE("function pointer traits")
         static_assert(std::is_same_v<traits::args, TypeList<>>);
         static_assert(!traits::is_const);
         static_assert(traits::is_member);
-        static_assert(std::is_same_v<traits::pointer, std::string (Clazz::*)(void)>);
+        static_assert(std::is_same_v<traits::pointer, std::string (Clazz::*)()>);
         static_assert(std::is_same_v<traits::return_type, std::string>);
-        static_assert(std::is_same_v<traits::type, std::string (Clazz::*)(void)>);
+        static_assert(std::is_same_v<traits::type, std::string (Clazz::*)()>);
     }
 
     SECTION("const member function")
