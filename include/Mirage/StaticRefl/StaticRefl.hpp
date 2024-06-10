@@ -4,6 +4,8 @@
 #include "Mirage/Util/TypeList.hpp"
 #include "Mirage/Util/VariableTraits.hpp"
 
+#include <string_view>
+
 namespace mirage::srefl
 {
     /**
@@ -26,21 +28,35 @@ namespace mirage::srefl
         { };
     }    // namespace internal
 
+    constexpr std::string_view stripName(const std::string_view name)
+    {
+        auto idx = name.find_last_of(":");
+        if (idx == std::string_view::npos)
+        {
+            idx = name.find_last_of('&');
+            if (idx == std::string_view::npos)
+                return name;
+            return name.substr(idx + 1, name.length());
+        }
+        return name.substr(idx + 1, name.length());
+    }
+
     /**
      * @brief extract class field (member variable, member function) info.
      * @tparam T
-     * @tparam AttrList
-     * @tparam Next
-     * @tparam Type
+     * @tparams Attrs
      */
-    template <auto T,
-              typename AttrList = AttrList<>,
-              typename Next     = void,
-              typename Type     = decltype(T)>
-    struct FieldTraits : internal::BasicFieldTraits<Type, util::is_function_v<Type>>
+    template <typename T, typename... Attrs>
+    struct FieldTraits : internal::BasicFieldTraits<T, util::is_function_v<T>>
     {
-        using next                    = Next;
-        static constexpr auto pointer = T;
+        explicit constexpr FieldTraits(T &&pointer, std::string_view name, Attrs &&...attrs)
+          : pointer(std::forward<T>(pointer)), name(stripName(name)),
+            attrs(std::forward<Attrs>(attrs)...)
+        { }
+
+        T pointer;
+        std::string_view name;
+        std::tuple<Attrs...> attrs;
     };
 
     /**
@@ -74,6 +90,6 @@ namespace mirage::srefl
      * @brief store class type info
      * @tparam T
      */
-    template <typename T>
+    template <typename T, typename... Attrs>
     struct TypeInfo;
 }    // namespace mirage::srefl

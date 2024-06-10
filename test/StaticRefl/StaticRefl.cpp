@@ -1,10 +1,13 @@
 #include "Mirage/StaticRefl/StaticRefl.hpp"
 
+#include "Mirage/DynamicRefl/Any.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
+namespace util = mirage::util;
 using namespace mirage::util;
 using namespace mirage::srefl;
 
@@ -34,8 +37,8 @@ class Person final
 
 std::string Person::familyName = "litter home";
 
-#include "Mirage/StaticRefl/StaticReflBegin.hpp"
 // clang-format off
+#include "Mirage/StaticRefl/StaticReflBegin.hpp"
 SReflClass(Person)
 // template <>
 // struct srefl::TypeInfo<Person> : srefl::BaseTypeInfo<Person>
@@ -48,83 +51,86 @@ SReflClass(Person)
     //                               Srefl::FieldTraits<&Person::children>,
     //                               ...
     //                               Srefl::FieldTraits<&Person::operator+ >>;
-    Fields<Field<&Person::addChild>,
-           Field<&Person::children>,
-           Field<&Person::getHeight>,
-           Field<&Person::getName>,
-           Field<&Person::name>,
-           Field<&Person::operator+ >>;
+
+    Fields(
+       Field(&Person::addChild),
+       Field(&Person::children),
+       Field(&Person::getHeight),
+       Field(&Person::getName),
+       Field(&Person::name),
+       Field(&Person::operator+ )
+    );
 };
 #include "Mirage/StaticRefl/StaticReflEnd.hpp"
 // clang-format on
+
+TEST_CASE("strip name")
+{
+    static_assert(stripName("Person") == "Person");
+    static_assert(stripName("::Person") == "Person");
+    static_assert(stripName("namespace::Person") == "Person");
+    static_assert(stripName("&Person::Foo") == "Foo");
+    static_assert(stripName("&Foo") == "Foo");
+}
 
 TEST_CASE("field traits")
 {
     SECTION("member function")
     {
-        using traits = FieldTraits<&Person::addChild>;
-        static_assert(std::is_same_v<traits::return_type, void>);
-        static_assert(std::is_same_v<traits::args, TypeList<const Person &>>);
-        static_assert(!traits::is_const);
-        static_assert(traits::is_member);
-        static_assert(traits::pointer == &Person::addChild);
+        constexpr auto traits = FieldTraits {&Person::addChild, "&Person::addChild"};
+        static_assert(std::is_same_v<decltype(traits)::return_type, void>);
+        static_assert(std::is_same_v<decltype(traits)::args, TypeList<const Person &>>);
+        static_assert(!decltype(traits)::is_const);
+        static_assert(decltype(traits)::is_member);
+        static_assert(traits.pointer == &Person::addChild);
+        static_assert(traits.name == "addChild");
     }
 
     SECTION("member operator function")
     {
-        using traits = FieldTraits<&Person::operator+ >;
-        static_assert(traits::is_member);
-        static_assert(std::is_same_v<traits::return_type, Person &>);
-        static_assert(std::is_same_v<traits::args, TypeList<const Person &>>);
-        static_assert(traits::pointer == &Person::operator+);
+        constexpr auto traits = FieldTraits {&Person::operator+, "&operator+"};
+        static_assert(decltype(traits)::is_member);
+        static_assert(std::is_same_v<decltype(traits)::return_type, Person &>);
+        static_assert(std::is_same_v<decltype(traits)::args, TypeList<const Person &>>);
+        static_assert(traits.pointer == &Person::operator+);
+        static_assert(traits.name == "operator+");
     }
 
     SECTION("member const function")
     {
-        using traits = FieldTraits<&Person::getHeight>;
-        static_assert(traits::is_member);
-        static_assert(traits::is_const);
-        static_assert(std::is_same_v<traits::return_type, float>);
-        static_assert(std::is_same_v<traits::args, TypeList<>>);
-        static_assert(traits::pointer == &Person::getHeight);
+        constexpr auto traits = FieldTraits {&Person::getHeight, "&Person::getHeight"};
+        static_assert(decltype(traits)::is_member);
+        static_assert(decltype(traits)::is_const);
+        static_assert(std::is_same_v<decltype(traits)::return_type, float>);
+        static_assert(std::is_same_v<decltype(traits)::args, TypeList<>>);
+        static_assert(traits.pointer == &Person::getHeight);
+        static_assert(traits.name == "getHeight");
     }
 
     SECTION("member variable")
     {
-        using traits = FieldTraits<&Person::name>;
-        static_assert(traits::is_member);
-        static_assert(std::is_same_v<traits::type, std::string>);
-        static_assert(traits::pointer == &Person::name);
+        constexpr auto traits = FieldTraits {&Person::name, "&Person::name"};
+        static_assert(decltype(traits)::is_member);
+        static_assert(std::is_same_v<decltype(traits)::type, std::string>);
+        static_assert(traits.pointer == &Person::name);
+        static_assert(traits.name == "name");
     }
 
     SECTION("member variable")
     {
-        using traits = FieldTraits<&Person::children>;
-        static_assert(traits::is_member);
-        static_assert(std::is_same_v<traits::type, std::vector<Person>>);
-        static_assert(traits::pointer == &Person::children);
+        constexpr auto traits = FieldTraits {&Person::children, "&Person::children"};
+        static_assert(decltype(traits)::is_member);
+        static_assert(std::is_same_v<decltype(traits)::type, std::vector<Person>>);
+        static_assert(traits.pointer == &Person::children);
+        static_assert(traits.name == "children");
     }
+
     SECTION("static member variable")
     {
-        using traits = FieldTraits<&Person::familyName>;
-        static_assert(!traits::is_member);
-        static_assert(std::is_same_v<traits::type, std::string>);
-        static_assert(traits::pointer == &Person::familyName);
-    }
-    SECTION("macro generation")
-    {
-        using type_info = TypeInfo<Person>;
-        static_assert(std::is_same_v<type_info::type, Person>);
-        static_assert(std::is_same_v<type_info::bases, TypeList<>>);
-        static_assert(
-            std::is_same_v<type_info::ctors, TypeList<Ctor<const std::string &, float>>>);
-        static_assert(type_info::isFinal);
-        static_assert(std::is_same_v<type_info::fields,
-                                     TypeList<FieldTraits<&Person::addChild>,
-                                              FieldTraits<&Person::children>,
-                                              FieldTraits<&Person::getHeight>,
-                                              FieldTraits<&Person::getName>,
-                                              FieldTraits<&Person::name>,
-                                              FieldTraits<&Person::operator+ >>>);
+        constexpr auto traits = FieldTraits {&Person::familyName, "&Person::familyName"};
+        static_assert(!decltype(traits)::is_member);
+        static_assert(std::is_same_v<decltype(traits)::type, std::string>);
+        static_assert(traits.pointer == &Person::familyName);
+        static_assert(traits.name == "familyName");
     }
 }
