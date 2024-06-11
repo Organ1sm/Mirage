@@ -21,24 +21,52 @@ namespace mirage::srefl
 
         template <typename T>
         struct BasicFieldTraits<T, true> : util::FunctionTraits<T>
-        { };
+        {
+            constexpr bool isConstMember() const noexcept
+            {
+                return util::FunctionTraits<T>::is_const;
+            }
+
+            constexpr bool isMember() const noexcept
+            {
+                return util::FunctionTraits<T>::is_member;
+            }
+
+            constexpr bool isFunction() const noexcept { return true; }
+
+            constexpr bool isVariable() const noexcept { return false; }
+        };
 
         template <typename T>
         struct BasicFieldTraits<T, false> : util::VariableTraits<T>
-        { };
+        {
+            constexpr bool isConstMember() const noexcept { return false; }
+
+            constexpr bool isMember() const noexcept
+            {
+                return util::VariableTraits<T>::is_member;
+            }
+
+            constexpr bool isFunction() const noexcept { return false; }
+
+            constexpr bool isVariable() const noexcept { return true; }
+        };
     }    // namespace internal
 
-    constexpr std::string_view stripName(const std::string_view name)
+    /**
+     * @brief strip class/function/variable name from namespace/class prefix to pure name
+     * @param name
+     * @return striped name
+     */
+    constexpr std::string_view stripName(std::string_view name)
     {
-        auto idx = name.find_last_of(":");
-        if (idx == std::string_view::npos)
-        {
-            idx = name.find_last_of('&');
-            if (idx == std::string_view::npos)
-                return name;
-            return name.substr(idx + 1, name.length());
-        }
-        return name.substr(idx + 1, name.length());
+        if (const auto idx = name.find_last_of('&'); idx != std::string_view::npos)
+            name = name.substr(idx + 1, name.length());
+        if (const auto idx = name.find_last_of(':'); idx != std::string_view::npos)
+            name = name.substr(idx + 1, name.length());
+        if (const auto idx = name.find_first_of(')'); idx != std::string_view::npos)
+            name = name.substr(0, idx);
+        return name;
     }
 
     /**
@@ -50,13 +78,32 @@ namespace mirage::srefl
     struct FieldTraits : internal::BasicFieldTraits<T, util::is_function_v<T>>
     {
         explicit constexpr FieldTraits(T &&pointer, std::string_view name, Attrs &&...attrs)
-          : pointer(std::forward<T>(pointer)), name(stripName(name)),
-            attrs(std::forward<Attrs>(attrs)...)
+          : pointer_(std::forward<T>(pointer)), name_(stripName(name)),
+            attrs_(std::forward<Attrs>(attrs)...)
         { }
 
-        T pointer;
-        std::string_view name;
-        std::tuple<Attrs...> attrs;
+        /**
+         * @brief check whether field is a const member (class const function)
+         */
+        constexpr bool isConstMember() const noexcept { return base::isConstMember(); }
+
+        /**
+         * @brief  check whether field is class member or static/global
+         */
+        constexpr bool isMember() const noexcept { return base::isMember(); }
+
+        constexpr auto getName() const noexcept { return name_; }
+
+        constexpr auto getPointer() const noexcept { return pointer_; }
+
+        constexpr auto &getAttrs() const noexcept { return attrs_; }
+
+      private:
+        using base = internal::BasicFieldTraits<T, util::is_function_v<T>>;
+
+        T pointer_;
+        std::string_view name_;
+        std::tuple<Attrs...> attrs_;
     };
 
     /**

@@ -13,10 +13,7 @@ fetchcontent_declare(
 )
 fetchcontent_makeavailable(Catch2)
 
-add_library(Mirage INTERFACE
-        include/Mirage/DynamicRefl/Any.hpp
-        include/Mirage/DynamicRefl/Any.hpp
-        include/Mirage/StaticRefl/Reflect.hpp)
+add_library(Mirage INTERFACE)
 target_include_directories(Mirage INTERFACE ./include)
 target_compile_features(Mirage INTERFACE cxx_std_17)
 

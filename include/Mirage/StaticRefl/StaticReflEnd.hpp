@@ -1,7 +1,5 @@
 #pragma once
 
-#undef MIRAGE_SREFL_BEGIN
-}
 #undef SReflClass
 #undef Fields
 #undef Field

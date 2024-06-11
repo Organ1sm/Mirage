@@ -93,7 +93,7 @@ namespace mirage::util
      * @tparam List
      */
     template <typename List>
-    constexpr bool is_list_empty = list_size_v<List> == 0;
+    constexpr bool is_list_empty_v = list_size_v<List> == 0;
 
     /**
      * @brief get head element from type list

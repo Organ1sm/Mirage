@@ -1,1 +1,2 @@
 AddTest(StaticRefl)
+AddTest(Reflect)

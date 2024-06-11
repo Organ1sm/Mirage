@@ -1,7 +1,5 @@
 #include "Mirage/StaticRefl/StaticRefl.hpp"
 
-#include "Mirage/DynamicRefl/Any.hpp"
-
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <utility>
@@ -39,28 +37,33 @@ std::string Person::familyName = "litter home";
 
 // clang-format off
 #include "Mirage/StaticRefl/StaticReflBegin.hpp"
-SReflClass(Person)
-// template <>
-// struct srefl::TypeInfo<Person> : srefl::BaseTypeInfo<Person>
-{
-    // using bases = typename util::TypeList<>;
-    Bases<>;
-    // using ctors = util::TypeList<srefl::Ctor<const std::stirng &, float>>;
-    Ctors<Ctor<const std::string &, float>>;
-    // using fields = util::TypeList<Srefl::FieldTraits<&Person::addChild>,
-    //                               Srefl::FieldTraits<&Person::children>,
-    //                               ...
-    //                               Srefl::FieldTraits<&Person::operator+ >>;
 
-    Fields(
-       Field(&Person::addChild),
-       Field(&Person::children),
-       Field(&Person::getHeight),
-       Field(&Person::getName),
-       Field(&Person::name),
-       Field(&Person::operator+ )
-    );
-};
+namespace mirage::srefl
+{
+    SReflClass(Person)
+    // template <>
+    // struct srefl::TypeInfo<Person> : srefl::BaseTypeInfo<Person>
+    {
+        // using bases = util::TypeList<>;
+        Bases()
+        // using ctors = util::TypeList<srefl::Ctor<const std::stirng &, float>>;
+        Ctors(Ctor(const std::string &, float))
+        // using fields = util::TypeList<Srefl::FieldTraits<&Person::addChild>,
+        //                               Srefl::FieldTraits<&Person::children>,
+        //                               ...
+        //                               Srefl::FieldTraits<&Person::operator+ >>;
+        Fields(
+           Field(&Person::addChild),
+           Field(&Person::children),
+           Field(&Person::getHeight),
+           Field(&Person::getName),
+           Field(&Person::name),
+           Field(&Person::operator+ )
+        )
+    };
+
+#undef MIRAGE_SREFL_BEGIN
+}
 #include "Mirage/StaticRefl/StaticReflEnd.hpp"
 // clang-format on
 
@@ -80,57 +83,58 @@ TEST_CASE("field traits")
         constexpr auto traits = FieldTraits {&Person::addChild, "&Person::addChild"};
         static_assert(std::is_same_v<decltype(traits)::return_type, void>);
         static_assert(std::is_same_v<decltype(traits)::args, TypeList<const Person &>>);
-        static_assert(!decltype(traits)::is_const);
-        static_assert(decltype(traits)::is_member);
-        static_assert(traits.pointer == &Person::addChild);
-        static_assert(traits.name == "addChild");
+        static_assert(!traits.isConstMember());
+        static_assert(traits.getPointer() == &Person::addChild);
+        static_assert(traits.getName() == "addChild");
     }
 
     SECTION("member operator function")
     {
         constexpr auto traits = FieldTraits {&Person::operator+, "&operator+"};
-        static_assert(decltype(traits)::is_member);
+        static_assert(!traits.isConstMember());
         static_assert(std::is_same_v<decltype(traits)::return_type, Person &>);
         static_assert(std::is_same_v<decltype(traits)::args, TypeList<const Person &>>);
-        static_assert(traits.pointer == &Person::operator+);
-        static_assert(traits.name == "operator+");
+        static_assert(traits.getPointer() == &Person::operator+);
+        static_assert(traits.getName() == "operator+");
     }
 
     SECTION("member const function")
     {
         constexpr auto traits = FieldTraits {&Person::getHeight, "&Person::getHeight"};
-        static_assert(decltype(traits)::is_member);
-        static_assert(decltype(traits)::is_const);
+        static_assert(traits.isConstMember());
+        static_assert(traits.isMember());
         static_assert(std::is_same_v<decltype(traits)::return_type, float>);
         static_assert(std::is_same_v<decltype(traits)::args, TypeList<>>);
-        static_assert(traits.pointer == &Person::getHeight);
-        static_assert(traits.name == "getHeight");
+        static_assert(traits.getPointer() == &Person::getHeight);
+        static_assert(traits.getName() == "getHeight");
     }
 
     SECTION("member variable")
     {
         constexpr auto traits = FieldTraits {&Person::name, "&Person::name"};
-        static_assert(decltype(traits)::is_member);
+        static_assert(!traits.isConstMember());
+        static_assert(traits.isMember());
         static_assert(std::is_same_v<decltype(traits)::type, std::string>);
-        static_assert(traits.pointer == &Person::name);
-        static_assert(traits.name == "name");
+        static_assert(traits.getPointer() == &Person::name);
+        static_assert(traits.getName() == "name");
     }
 
     SECTION("member variable")
     {
         constexpr auto traits = FieldTraits {&Person::children, "&Person::children"};
-        static_assert(decltype(traits)::is_member);
+        static_assert(traits.isMember());
+        static_assert(!traits.isConstMember());
         static_assert(std::is_same_v<decltype(traits)::type, std::vector<Person>>);
-        static_assert(traits.pointer == &Person::children);
-        static_assert(traits.name == "children");
+        static_assert(traits.getPointer() == &Person::children);
+        static_assert(traits.getName() == "children");
     }
 
     SECTION("static member variable")
     {
         constexpr auto traits = FieldTraits {&Person::familyName, "&Person::familyName"};
-        static_assert(!decltype(traits)::is_member);
+        static_assert(!traits.isMember());
         static_assert(std::is_same_v<decltype(traits)::type, std::string>);
-        static_assert(traits.pointer == &Person::familyName);
-        static_assert(traits.name == "familyName");
+        static_assert(traits.getPointer() == &Person::familyName);
+        static_assert(traits.getName() == "familyName");
     }
 }
